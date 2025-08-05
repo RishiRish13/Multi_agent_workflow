@@ -1,0 +1,142 @@
+{
+  "name": "Daily Expense Summary Mail",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 4
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        -16
+      ],
+      "id": "e15abbc0-efab-482c-bfe6-ebe87269a352",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1IQxOubuuxH_fqZZKucom03SnChI1XmJzYgzTVQ7esXQ",
+          "mode": "list",
+          "cachedResultName": "Personal Finance Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IQxOubuuxH_fqZZKucom03SnChI1XmJzYgzTVQ7esXQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IQxOubuuxH_fqZZKucom03SnChI1XmJzYgzTVQ7esXQ/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -112,
+        -16
+      ],
+      "id": "a68e82ff-00ce-43fe-80b2-043f431e72c7",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gmPOC2eFyGFq3X7A",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const totals = {};\n\nfor (const item of items) {\n  const category = item.json.category?.trim();\n  const amount = parseFloat(item.json.amount);\n\n  if (!category || isNaN(amount)) continue;\n\n  if (!totals[category]) {\n    totals[category] = 0;\n  }\n  totals[category] += amount;\n}\n\nconst summary = Object.entries(totals)\n  .map(([category, total]) => `${category}: ₹${total.toFixed(2)}`)\n  .join('\\n');\n\nreturn [{ json: { summary } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -16
+      ],
+      "id": "f24bb05c-cb59-4d18-9fce-cc0fcb4b9f52",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sendTo": "singhrs369122@gmail.com",
+        "subject": "=",
+        "emailType": "text",
+        "message": "=Here is your daily expense summary by category:  {{ $json[\"summary\"] }}  – Personal Finance Analyzer 🧾",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        -16
+      ],
+      "id": "2627ae3b-b923-4dcd-8277-d436d2ced30d",
+      "name": "Send a message",
+      "webhookId": "568dcdad-c228-42cc-8056-a8ab74d2f315",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8iCJYis4w7kqVCMn",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "aeacaefb-e60a-4abf-bdf1-287b9e81d20b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "84c175fd3dff27e2a35e6cbdf74f28ea0f6693eb820bcaee502e8c86fe973e56"
+  },
+  "id": "kFwTCF5kygdsc7sZ",
+  "tags": []
+}

@@ -1,0 +1,147 @@
+{
+  "name": "GPT Categorizer Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "categorize-expense",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "98a30458-52ca-4b5c-97e5-9178cf371d4a",
+      "name": "Webhook",
+      "webhookId": "d654d354-e53b-451c-a029-3f54447812d5"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Transaction: ₹{{$json[\"body\"][\"amount\"]}} paid to {{$json[\"body\"][\"vendor\"]}} on {{$json[\"body\"][\"date\"]}} as a {{$json[\"body\"][\"type\"]}} transaction.\n\nCategorize this transaction into one of the following categories:\n- Food\n- Travel\n- Shopping\n- Utilities\n- Entertainment\n- Health\n- Others\n\nReturn only the category name (no sentence, no fullstop).\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        208,
+        0
+      ],
+      "id": "5da82a0e-be5b-4467-882d-d81b3483ed8c",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "jIaVdrE3XgTGQZ78",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ba0882fc-7e52-4110-84a3-07ccbc226854",
+              "name": "category",
+              "value": "=\t{{$json[\"message\"][\"content\"]}}\n",
+              "type": "string"
+            },
+            {
+              "id": "91d3c5a4-98c3-4582-8746-0d2551221212",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        0
+      ],
+      "id": "890c58a0-782f-4788-ba58-3169e59f6cf6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200,
+          "responseKey": "All Entries"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        768,
+        0
+      ],
+      "id": "3535816e-d152-41e1-9d87-ec4504a2c782",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1fafda86-2068-4dd9-869a-556334f733b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "84c175fd3dff27e2a35e6cbdf74f28ea0f6693eb820bcaee502e8c86fe973e56"
+  },
+  "id": "Bj2j4uha7jvY0NBN",
+  "tags": []
+}

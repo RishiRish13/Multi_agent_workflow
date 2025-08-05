@@ -1,0 +1,236 @@
+{
+  "name": "workflow1",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "INBOX"
+          ],
+          "q": "=subject:(debited OR credited) OR from:(alerts@icicibank.com OR noreply@axisbank.com OR alerts@hdfcbank.com)\n"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        16
+      ],
+      "id": "8937e38e-3d06-4336-99e7-204e6fa75c0e",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8iCJYis4w7kqVCMn",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://rishirish132003.app.n8n.cloud/webhook-test/categorize-expense",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"vendor\": \"{{ $json.vendor }}\",\n  \"type\": \"{{ $json.type }}\",\n  \"amount\": \"{{ $json.amount }}\",\n  \"date\": \"{{ $json.date }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        288,
+        16
+      ],
+      "id": "4bbe04f2-4e04-4f8d-9d1e-de2e3976aad4",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2c459570-22ba-4953-86e1-99716fc44225",
+              "name": "amount",
+              "value": "={{ $('Code').item.json.amount }}",
+              "type": "string"
+            },
+            {
+              "id": "fbee418e-23d0-4b4b-872f-d6f954775e40",
+              "name": "type",
+              "value": "={{ $('Code').item.json.type }}",
+              "type": "string"
+            },
+            {
+              "id": "fe2094b2-c10c-4f03-9c3d-f6116e02f65d",
+              "name": "date",
+              "value": "={{ $('Code').item.json.date }}",
+              "type": "string"
+            },
+            {
+              "id": "20fe5937-9d42-4e8b-877e-f22ba15adf88",
+              "name": "category",
+              "value": "={{ $json['All Entries'].category }}",
+              "type": "string"
+            },
+            {
+              "id": "1c08ac25-c316-4fd7-9a5e-2bb411643e84",
+              "name": "vendor",
+              "value": "={{ $('Code').item.json.vendor }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        16
+      ],
+      "id": "6290708d-d671-4bab-be1c-0f31e03c82ff",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1IQxOubuuxH_fqZZKucom03SnChI1XmJzYgzTVQ7esXQ",
+          "mode": "list",
+          "cachedResultName": "Personal Finance Logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IQxOubuuxH_fqZZKucom03SnChI1XmJzYgzTVQ7esXQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IQxOubuuxH_fqZZKucom03SnChI1XmJzYgzTVQ7esXQ/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "date",
+              "lookupValue": "=\t{{$json[\"date\"]}}"
+            },
+            {
+              "lookupColumn": "vendor",
+              "lookupValue": "={{$json[\"vendor\"]}}"
+            },
+            {
+              "lookupColumn": "amount",
+              "lookupValue": "=\t{{$json[\"amount\"]}}"
+            },
+            {
+              "lookupColumn": "type",
+              "lookupValue": "={{$json[\"type\"]}}"
+            },
+            {
+              "lookupColumn": "category",
+              "lookupValue": "={{$json[\"category\"]}}"
+            }
+          ]
+        },
+        "options": {
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        880,
+        16
+      ],
+      "id": "349a12e0-7fa2-492d-99c9-ab3d9736e753",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gmPOC2eFyGFq3X7A",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.snippet;\n\n// Match amount (e.g., INR 899)\nconst amountMatch = text.match(/INR\\s?([\\d,]+)/i);\nconst amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : null;\n\n// Match type (debit/credit)\nconst type = text.toLowerCase().includes(\"debited\") ? \"debit\" : \n             text.toLowerCase().includes(\"credited\") ? \"credit\" : \"unknown\";\n\n// Match vendor (e.g., to Swiggy)\nconst vendorMatch = text.match(/to\\s+([a-zA-Z]+)/i);\nconst vendor = vendorMatch ? vendorMatch[1] : \"unknown\";\n\n// Match date (e.g., on 01-Aug-2025)\nconst dateMatch = text.match(/on\\s(\\d{2}-[A-Za-z]{3}-\\d{4})/);\nconst date = dateMatch ? new Date(dateMatch[1]).toISOString().split('T')[0] : null;\n\nreturn [{\n  json: {\n    amount,\n    vendor,\n    type,\n    date\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        16
+      ],
+      "id": "356be72a-124d-400e-a4c9-cbf4cceba46e",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b25bae14-5d00-4c4d-af6e-a13c40f2cbc1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "84c175fd3dff27e2a35e6cbdf74f28ea0f6693eb820bcaee502e8c86fe973e56"
+  },
+  "id": "bVNdlCb8vsxDqWb0",
+  "tags": []
+}
